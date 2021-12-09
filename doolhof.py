@@ -41,39 +41,11 @@ class Maze:
         translate_action = {'↑': [0, 1], '→': [1, 0], '↓': [0, -1], '←': [-1, 0]}
         state = self.states_matrix[location[0]][location[1]]
         new_location = [sum(x) for x in zip(state.location, translate_action[action])]
-        print(new_location)
-        for i in new_location:
+
+        for i in new_location:  # If out of bounds
             if i >= 4 or i < 0:
-                return state
-        return new_location
-        # #
-        # if action == '↑':  # Go one step to the top
-        #     new_y = location[1] + 1
-        #     if new_y >= 4:
-        #         return self.states_matrix[location[0]][location[1]]
-        #     else:
-        #         return self.states_matrix[location[0]][new_y]
-        #
-        # elif action == '→':  # Go one step to the right
-        #     new_x = location[0] + 1
-        #     if new_x >= 4:
-        #         return self.states_matrix[location[0]][location[1]]
-        #     else:
-        #         return self.states_matrix[new_x][location[1]]
-        #
-        # elif action == '↓':  # Go one step to the bottom
-        #     new_y = location[1] - 1
-        #     if new_y < 0:
-        #         return self.states_matrix[location[0]][location[1]]
-        #     else:
-        #         return self.states_matrix[location[0]][new_y]
-        #
-        # elif action == '←':  # Go one step to the left
-        #     new_x = location[0] - 1
-        #     if new_x < 0:
-        #         return self.states_matrix[location[0]][location[1]]
-        #     else:
-        #         return self.states_matrix[new_x][location[1]]
+                return state  # Return original state
+        return self.states_matrix[new_location[0]][new_location[1]]
 
 
 @dataclass

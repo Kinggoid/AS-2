@@ -1,9 +1,10 @@
-from Inleveropdracht_1.doolhof import Maze
-from Inleveropdracht_1.agent import Agent
-from Inleveropdracht_1.policy import Policy
+from Inleveropdracht_2.assignment_1_1.doolhof import Maze
+from Inleveropdracht_2.assignment_1_1.agent import Agent
+from Inleveropdracht_2.assignment_1_1.policy import Policy
 
 
-def main():
+def setup():
+    """Setup the environment."""
     #  Get a list of every possible coördinate
     matrix = []
     for i in range(0, 4):
@@ -27,16 +28,25 @@ def main():
     maze = Maze(matrix, values, actions, endstates)  # Initialize the maze
     policy = Policy(maze, rewards, gamma)  # Initialize the policy
     agent = Agent(maze, policy, location_agent, delta)  # Initialize the agent
-
-    # Start the value iteration
-    # agent.monte_carlo_policy_evaluation(maze.states_matrix[2][0])
-    agent.value_iteration()
-    return None
-    #
-    # print('\n')
-    # if input("Ben je klaar om de agent het pad af te zien lopen? \n"
-    #          "Zeg 'Ja' als je hier klaar voor bent: ") == 'Ja':
-    #     agent.agent_path()
+    return maze, policy, agent
 
 
-main()
+def main(y):
+    """Choose which algorithm to use."""
+    maze, policy, agent = setup()  # Setup the environment
+
+    while True:  # Keep asking which algorithm the user wants to use until he makes a valid choice
+        which_algorithm = input("Type '1' if you want to use the Monte Carlo Policy Evaluation algorithm.\n"
+                            "And type '2' if you want to use the Temporal Difference Learning algorithm: \n")
+        if which_algorithm == '1':
+            return agent.monte_carlo_policy_evaluation(maze.states_matrix[2][0], y)
+        elif which_algorithm == '2':
+            return agent.temporal_difference_learning(maze.states_matrix[2][0], y)
+        else:
+            pass
+
+
+main(1)
+print('\n')
+main(0.9)
+

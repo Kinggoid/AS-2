@@ -1,11 +1,8 @@
-from dataclasses import dataclass
-
-from Inleveropdracht_1.doolhof import Maze
-from Inleveropdracht_1.policy import Policy
+from Inleveropdracht_2.assignment_1_1.doolhof import Maze
+from Inleveropdracht_2.assignment_1_1.policy import Policy
 
 import random
 from typing import List
-import numpy as np
 from statistics import mean
 
 
@@ -51,7 +48,7 @@ class Agent:
         return values
 
     def list_to_4x4_matrix(self, lst):
-        lst = list(lst)[::-1]
+        lst = list(lst)
         matrix = []
         for i in range(len(lst) - 4, -4, -4):
             row = []
@@ -106,63 +103,113 @@ class Agent:
             print('\n')
 
     def episode(self, startstate, policy):
+        """Create an episode."""
         path = []
-
         state = startstate
-        while not state.is_endstate:
+
+        while not state.is_endstate:  # If the new state isn't an endstate, save it and get a new state from the policy
             path.append(state)
             action = random.choice(policy.policies[state.location[0]][state.location[1]])
             state = self.maze.step(state.location, action)
+        path.append(state)
         return path
 
-    # def unique(self, lst):
-    #     output = []
-    #     for x in lst:
-    #         if x not in output:
-    #             output.append(x)
-    #     return output
-
-    def monte_carlo_policy_evaluation(self, beginstate):
+    def initialize_values_and_returns(self):
+        """Initialize the value and returns dictionaries."""
         values = {}
         returns = {}
         for state in self.maze.states:
-            values[str(state)] = 0
+            if state.is_endstate:
+                values[str(state)] = self.policy.reward_matrix[state.location[0]][state.location[1]]
+            else:
+                values[str(state)] = 0
             returns[str(state)] = []
+        return returns, values
+
+    def monte_carlo_policy_evaluation_main_loop(self, beginstate, gamma):
+        """Monte Carlo main loop."""
+        returns, values = self.initialize_values_and_returns()
 
         k = 0
-
-        while k != 500:
+        amount_of_episodes = 5000  # We run 5000 episodes
+        while k != amount_of_episodes:
             k += 1
-            episode = self.episode(beginstate, self.policy)
-            episode.reverse()
+            y = gamma
+            episode = self.episode(beginstate, self.policy)  # Create episode
+            episode.reverse()  # Since we are going to be working backwards, we reverse the episode list so we can
+                                # iterate starting from the end
             g = 0
-            # episode[len(episode) - 1 :: -1]
 
-            for state in range(1, len(episode)):
-                next_state = episode[state - 1]
+            for state in range(1, len(episode)):  # For every state in the episode
+                next_state = episode[state - 1]  # What state would follow this state in the episode
                 state_location = next_state.location
-                g += self.policy.reward_matrix[state_location[0], state_location[1]]
+                next_state_reward = self.policy.reward_matrix[state_location[0], state_location[1]]
+                g = y * g + next_state_reward
 
-                if episode[state] not in episode[state + 1:]:
+                if episode[state] not in episode[:state]:  # Only update the last states in the episode
                     returns[str(episode[state])].append(g)
                     return_mean = mean(returns[str(episode[state])])
                     values[str(episode[state])] = return_mean
+        return returns, values
 
-        for state in range(len(self.maze.states)):
-            self.maze.states[state].value = values[str(self.maze.states[state])]
+    def monte_carlo_policy_evaluation(self, beginstate, gamma):
+        """Monte carlo policy evaluation main."""
+        returns, values = self.monte_carlo_policy_evaluation_main_loop(beginstate, gamma)  # The main loop
 
-        for state in range(len(self.maze.states)):
-            surrounding_states = Policy.get_surrounding_states(self.policy,
-                                                               self.maze.states[state])  # Get surrounding states
-
-            value_surrounding_states = []  # Get the value of these surrounding states
-            for surrounding_state in surrounding_states:
-                value_surrounding_states.append(Policy.bellman_equation(self.policy, surrounding_state))
-
-            # Update the policies and get the best value of this best action
-            Policy.select_action(self.policy, self.maze.states[state], surrounding_states, value_surrounding_states)
-
+        print('These are the values: ')
         self.list_to_4x4_matrix(values.values())
+        return values
+
+    def initialize_values(self):
+        """Initialize values."""
+        values = {}
+        for state in self.maze.states:
+            if state.is_endstate:
+                values[str(state)] = [self.policy.reward_matrix[state.location[0]][state.location[1]]]
+            else:
+                values[str(state)] = [0]
+        return values
+
+    def TDL_print_grid(self, lst):
+        """Print the grid for the Temporal Difference Learning algorithm."""
+        lst = list(lst)
+        matrix = []
+        for i in range(len(lst) - 4, -4, -4):
+            row = []
+            for j in range(4):
+                row.append(mean(lst[i + j]))
+            print(row)
+            matrix.append(row)
+        return matrix
+
+    def temporal_difference_learning_main_loop(self, beginstate, values, gamma):
+        """The temporal difference learning main loop."""
+        k = 0
+        amount_of_episodes = 5000
+        while k != amount_of_episodes:
+            k += 1
+            state = beginstate
+
+            while not state.is_endstate:  # While we haven't reached the endstate
+                action = random.choice(self.policy.policies[state.location[0]][state.location[1]])  # Pick an action
+                next_state = self.maze.step(state.location, action)  # Get the next state
+                value = values[str(state)][-1]  # Last state value
+                next_state_value = values[str(next_state)][-1]  # Last value of next state
+                next_state_reward = self.policy.reward_matrix[state.location[0]][state.location[1]]  # Next state reward
+                alpha = 1
+                new_value = value + alpha * (next_state_reward + (gamma * next_state_value) - value)
+                values[str(state)].append(new_value)
+                state = next_state  # Continue with next state
+        return values
+
+    def temporal_difference_learning(self, beginstate, gamma):
+        """Temporal Difference Learning main function."""
+        values = self.initialize_values()  # Initialize values
+
+        values = self.temporal_difference_learning_main_loop(beginstate, values, gamma)  # Main loop
+
+        print('These are the values: ')
+        self.TDL_print_grid(values.values())  # Print values/results
         return values
 
     def agent_path(self):
@@ -175,8 +222,8 @@ class Agent:
             new_state = self.maze.step(self.location,
                                        random.choice(policy))  # Find the coordinates of our next location
 
-            location = new_state.location
-            print('The agent is currently on coördinates: ' + str(location))
+            self.location = new_state.location
+            print('The agent is currently on coördinates: ' + str(self.location))
 
             if new_state.is_endstate:  # If we land on an endstate, we stop the simulation
                 break

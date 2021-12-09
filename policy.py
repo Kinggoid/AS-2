@@ -1,4 +1,4 @@
-from Inleveropdracht_1.doolhof import Maze
+from Inleveropdracht_2.assignment_1_1.doolhof import Maze
 
 from typing import List
 import numpy as np
@@ -26,7 +26,8 @@ class Policy:
         surrounding_states = []
         for direction in ['→', '←', '↑', '↓']:
             one_direction = Maze.step(self.maze, state.location, direction)
-            surrounding_states.append(self.maze.states_matrix[one_direction.location[0]][one_direction.location[1]])
+            location = one_direction.location
+            surrounding_states.append(self.maze.states_matrix[location[0]][location[1]])
         return surrounding_states
 
     def bellman_equation(self, state):
