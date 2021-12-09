@@ -1,1 +1,2 @@
 # AS-2
+To run this the files in this repository, simply clone it and run main.py. When you run it you will get the option to '1', use the Monte Carlo Policy Evaluation algorithm or '2' use the Temporal Difference learning algorithm. Select which one you want. After you filled this in, you will see the values this algorithm produced when used on our predetermined environment. Now, you will get the same choice. The difference is that first, we saw the algorithm with a gamma of 1.0 and the second iteration we will use a gamma of 0.9. So we can compare the results.
